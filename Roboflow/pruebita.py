@@ -1,33 +1,51 @@
 from ultralytics import YOLO
 import cv2
-import matplotlib.pyplot as plt
 
-# 1. Cargar el modelo entrenado (ajusta la ruta si es diferente)
-modelo = YOLO('roboflow/yolov8n.pt')
+# 1. Cargar el modelo YOLO entrenado
+modelo = YOLO('Roboflow/drowsiness_detection/yolov8_entrenamiento/weights/best.pt')  # Reemplaza con la ruta correcta
 
-# 2. Elegir una imagen para predecir (puedes cambiar la ruta a cualquier imagen de prueba)
-ruta_imagen = 'img.jpg'
+# 2. Iniciar captura de video (cámara por defecto)
+cap = cv2.VideoCapture(0)
 
-# 3. Realizar la predicción
-resultados = modelo(ruta_imagen)
+if not cap.isOpened():
+    raise IOError("No se pudo acceder a la cámara")
 
-# 4. Mostrar la imagen con las predicciones usando OpenCV
-imagen = cv2.imread(ruta_imagen)
-imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+# 3. Bucle de captura y detección en tiempo real
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-# Dibujar cajas directamente desde los resultados (opcional si quieres más control)
-for r in resultados:
-    for box in r.boxes:
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        conf = float(box.conf[0])
-        cls = int(box.cls[0])
-        label = f'{modelo.names[cls]} {conf:.2f}'
-        cv2.rectangle(imagen_rgb, (x1, y1), (x2, y2), (255, 0, 0), 2)
-        cv2.putText(imagen_rgb, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    # 4. Realizar predicción con el frame actual
+    resultados = modelo(frame)
 
-# 5. Mostrar con matplotlib
-plt.figure(figsize=(10, 6))
-plt.imshow(imagen_rgb)
-plt.axis('off')
-plt.title("Predicciones del modelo")
-plt.show()
+    # 5. Dibujar los resultados en el frame
+    for r in resultados:
+        for box in r.boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            conf = float(box.conf[0])
+            cls = int(box.cls[0])
+            nombre_clase = modelo.names[cls]
+            label = f'{nombre_clase} {conf:.2f}'
+
+            # Colores según la clase
+            if nombre_clase.lower() == "alerta":
+                color = (0, 255, 0)
+            elif nombre_clase.lower() == "somnoliento":
+                color = (0, 0, 255)
+            else:
+                color = (255, 255, 0)
+
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+    # 6. Mostrar el resultado en tiempo real
+    cv2.imshow('Detección de somnolencia', frame)
+
+    # Salir con la tecla 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# 7. Liberar recursos
+cap.release()
+cv2.destroyAllWindows()
