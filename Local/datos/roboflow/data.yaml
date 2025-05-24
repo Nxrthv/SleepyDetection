@@ -1,0 +1,11 @@
+names:
+['despierto', 'somnoliento']
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: nxrthz
+  url: https://universe.roboflow.com/nxrthz/nxrthz/dataset/1
+  version: 1
+  workspace: nxrthz
+train: ../train/images
+val: ../valid/images

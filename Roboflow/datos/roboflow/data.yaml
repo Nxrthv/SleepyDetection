@@ -1,0 +1,13 @@
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 1
+names: ['sleep']
+
+roboflow:
+  license: CC BY 4.0
+  project: nxrthz
+  url: https://universe.roboflow.com/nxrthz/nxrthz/dataset/1
+  version: 1
+  workspace: nxrthz
